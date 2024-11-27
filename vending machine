@@ -1,0 +1,220 @@
+package vendingMachine1;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.HashMap;
+
+public class VendingMachine {
+    private JFrame frame;
+    private JPanel loginPanel, managerPanel, customerPanel, detailsPanel, vendingPanel;
+    private JTextField usernameField, customerInput;
+    private JPasswordField passwordField;
+    private JLabel detailsLabel, vendingMessage;
+    private HashMap<String, Integer> inventory = new HashMap<>();
+    private HashMap<String, Integer> thresholds = new HashMap<>();
+    private HashMap<String, Double> prices = new HashMap<>();
+
+    public VendingMachine() {
+        // Initialize inventory, thresholds, and prices
+        inventory.put("Chips", 10);
+        thresholds.put("Chips", 5);
+        prices.put("Chips", 1.50);
+
+        inventory.put("Soda", 8);
+        thresholds.put("Soda", 5);
+        prices.put("Soda", 2.00);
+
+        inventory.put("Candy", 2);
+        thresholds.put("Candy", 3);
+        prices.put("Candy", 1.25);
+
+        inventory.put("Cookies", 6);
+        thresholds.put("Cookies", 3);
+        prices.put("Cookies", 2.50);
+
+        // Set up frame
+        frame = new JFrame("Vending Machine");
+        frame.setSize(500, 400);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new CardLayout());
+
+        // Create panels
+        createLoginPanel();
+        createManagerPanel();
+        createDetailsPanel();
+        createCustomerPanel();
+        createVendingPanel();
+
+        // Add panels to the frame
+        frame.add(loginPanel, "Login");
+        frame.add(managerPanel, "Manager");
+        frame.add(detailsPanel, "Details");
+        frame.add(customerPanel, "Customer");
+        frame.add(vendingPanel, "Vending");
+
+        // Show login panel
+        showPanel("Login");
+        frame.setVisible(true);
+    }
+
+    private void createLoginPanel() {
+        loginPanel = new JPanel(new GridBagLayout());
+        loginPanel.setBackground(new Color(220, 240, 255));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel titleLabel = new JLabel("Vending Machine Login", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        loginPanel.add(titleLabel, gbc);
+
+        JLabel usernameLabel = new JLabel("Username:");
+        usernameField = new JTextField();
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        loginPanel.add(usernameLabel, gbc);
+        gbc.gridx = 1;
+        loginPanel.add(usernameField, gbc);
+
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordField = new JPasswordField();
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        loginPanel.add(passwordLabel, gbc);
+        gbc.gridx = 1;
+        loginPanel.add(passwordField, gbc);
+
+        JButton managerLogin = new JButton("Manager Login");
+        managerLogin.addActionListener(e -> handleManagerLogin());
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        loginPanel.add(managerLogin, gbc);
+
+        JButton customerMode = new JButton("Customer Mode");
+        customerMode.addActionListener(e -> showPanel("Customer"));
+        gbc.gridy = 4;
+        loginPanel.add(customerMode, gbc);
+    }
+
+    private void createManagerPanel() {
+        managerPanel = new JPanel(new GridLayout(3, 1, 10, 10));
+        JLabel menuLabel = new JLabel("Manager Menu", SwingConstants.CENTER);
+        menuLabel.setFont(new Font("Arial", Font.BOLD, 16));
+
+        JButton thresholdButton = new JButton("Check Threshold");
+        thresholdButton.addActionListener(e -> showDetails("Threshold"));
+
+        JButton restockButton = new JButton("Restock Notification");
+        restockButton.addActionListener(e -> showDetails("Restock"));
+
+        JButton logoutButton = new JButton("Logout");
+        logoutButton.addActionListener(e -> showPanel("Login"));
+
+        managerPanel.add(menuLabel);
+        managerPanel.add(thresholdButton);
+        managerPanel.add(restockButton);
+        managerPanel.add(logoutButton);
+    }
+
+    private void createDetailsPanel() {
+        detailsPanel = new JPanel(new BorderLayout());
+        detailsLabel = new JLabel("", SwingConstants.CENTER);
+        detailsLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        detailsPanel.add(detailsLabel, BorderLayout.CENTER);
+
+        JButton backButton = new JButton("Back");
+        backButton.addActionListener(e -> showPanel("Manager"));
+        detailsPanel.add(backButton, BorderLayout.SOUTH);
+    }
+
+    private void createCustomerPanel() {
+        customerPanel = new JPanel(new BorderLayout());
+        JLabel customerLabel = new JLabel("Select Item to Purchase", SwingConstants.CENTER);
+        customerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        customerPanel.add(customerLabel, BorderLayout.NORTH);
+
+        customerInput = new JTextField();
+        JButton submitButton = new JButton("Submit");
+        submitButton.addActionListener(e -> handleCustomerSelection());
+        JPanel inputPanel = new JPanel();
+        inputPanel.add(new JLabel("Enter Item Name:"));
+        inputPanel.add(customerInput);
+        inputPanel.add(submitButton);
+        customerPanel.add(inputPanel, BorderLayout.CENTER);
+
+        JButton backButton = new JButton("Back");
+        backButton.addActionListener(e -> showPanel("Login"));
+        customerPanel.add(backButton, BorderLayout.SOUTH);
+    }
+
+    private void createVendingPanel() {
+        vendingPanel = new JPanel(new BorderLayout());
+        vendingMessage = new JLabel("", SwingConstants.CENTER);
+        vendingMessage.setFont(new Font("Arial", Font.BOLD, 14));
+        vendingPanel.add(vendingMessage, BorderLayout.CENTER);
+
+        JButton backButton = new JButton("Back");
+        backButton.addActionListener(e -> showPanel("Customer"));
+        vendingPanel.add(backButton, BorderLayout.SOUTH);
+    }
+
+    private void handleManagerLogin() {
+        String username = usernameField.getText();
+        String password = new String(passwordField.getPassword());
+
+        if (username.equals("manager") && password.equals("1234")) {
+            JOptionPane.showMessageDialog(frame, "Login successful!");
+            showPanel("Manager");
+        } else {
+            JOptionPane.showMessageDialog(frame, "Invalid username or password!");
+        }
+    }
+
+    private void showDetails(String type) {
+        StringBuilder message = new StringBuilder("<html>");
+        if (type.equals("Threshold")) {
+            message.append("<h3>Threshold Levels:</h3>");
+            for (String item : inventory.keySet()) {
+                message.append(item).append(": ").append(inventory.get(item)).append(" units (Threshold: ").append(thresholds.get(item)).append(")<br>");
+            }
+        } else if (type.equals("Restock")) {
+            message.append("<h3>Restock Notifications:</h3>");
+            for (String item : inventory.keySet()) {
+                if (inventory.get(item) <= thresholds.get(item)) {
+                    message.append(item).append(" needs restocking (Stock: ").append(inventory.get(item)).append(", Threshold: ").append(thresholds.get(item)).append(")<br>");
+                }
+            }
+        }
+        message.append("</html>");
+        detailsLabel.setText(message.toString());
+        showPanel("Details");
+    }
+
+    private void handleCustomerSelection() {
+        String item = customerInput.getText().trim();
+        if (!inventory.containsKey(item)) {
+            vendingMessage.setText("Item not found. Please try again.");
+        } else if (inventory.get(item) == 0) {
+            vendingMessage.setText(item + " is out of stock.");
+        } else {
+            inventory.put(item, inventory.get(item) - 1);
+            vendingMessage.setText("Dispensing " + item + ". Thank you for your purchase!");
+        }
+        showPanel("Vending");
+    }
+
+    private void showPanel(String panelName) {
+        CardLayout layout = (CardLayout) frame.getContentPane().getLayout();
+        layout.show(frame.getContentPane(), panelName);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(VendingMachine::new);
+    }
+}
